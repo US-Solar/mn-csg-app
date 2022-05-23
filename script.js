@@ -10,10 +10,10 @@
 
   // TOP of REQUIRE
   console.log("TOP OF REQUIRE");
-
+  
   esriConfig.apiKey = "AAPKc484c74fa23948cabcfac16c7aeb0686pq_j3wO_RKSRk5XKsXRfce7zvJdWILL_CQKtXpQW0s0RiIj9nhYN3OT9FnQ9LbzY";
 
-
+  
       
   // Arcade Script
   const arcadeScript = document.getElementById("projects-arcade").text;
@@ -41,20 +41,19 @@
     opacity: "0.7",   
   });
 
-//  map.add(counties); 
 
   // County layer popup 
   counties.popupTemplate = {
-      title: "{NAME} County",
-      content: [{
-          type: "fields",
-          fieldInfos: [{
-              fieldName: "expression/surrounding_counties"}]
-          }],
-      expressionInfos:[{
-          name: "surrounding_counties",
-          title: "Bordering Counties",
-          expression: arcadeScript}]
+      title: "{NAME} County"
+//      content: [{
+//          type: "fields",
+//          fieldInfos: [{
+//              fieldName: "expression/surrounding_counties"}]
+//          }],
+//      expressionInfos:[{
+//          name: "surrounding_counties",
+//          title: "Bordering Counties",
+//          expression: arcadeScript}]
   };
 
 
@@ -86,25 +85,25 @@
        value: "MN CSG VOS18",
        symbol: {
           type: "simple-marker",
-          color: "#3cccb4"
+          color: "#ab52b3"
         }
     }, {
        value: "MN CSG VOS19",
        symbol: {
           type: "simple-marker",
-          color: "#ab52b3"
+          color: "#ffdf3c"
         }
     }, { 
        value: "MN CSG VOS20",
        symbol: {
           type: "simple-marker",
-          color: "#ffdf3c"
+          color: "#c27c30"
         }
     }, {
        value: "DG project",
        symbol: {
           type: "simple-marker",
-          color: "#c27c30"
+          color: "#f260a1"
         } 
     }]
   };
@@ -149,6 +148,7 @@
         }]
     }]
   };
+      
   const csgLayer = new FeatureLayer({
       url: "https://services5.arcgis.com/V5xqUDxoOJurLR4H/arcgis/rest/services/MN_USS_Sites_Won_Centroids/FeatureServer/0",
       renderer: csgRenderer,
@@ -158,8 +158,6 @@
       spatialReference: {wkid: 3857},
       popupTemplate: csgTemplate
   });
-
-//  map.add(csgLayer);
    
       
   //Create the map
@@ -190,122 +188,22 @@
       snapToZoom: false
     }
   });
-      
+    
+    // Add Layers to map
     map.add(counties);
     map.add(csgLayer);
-    
-//    console.log(counties.popupTemplate.content.fieldInfos)
       
-  //Click event on counties to highlight surrounding counties
-//  view.ui.add("info", "top-right");
-  
-  view.on("click", (event) => {
-  let highlight;   
-
-    view.hitTest(event).then((response) => {
-
-      if(response.results.length) {
-      
-      const graphic = response.results[0].graphic;
-      const geom = graphic.geometry;
-
-  
-         view.whenLayerView(graphic.layer).then(function(layerView){
-             
-             //Maybe this should be in a function
-         
-              const query = counties.createQuery();
-              query.set({
-                  geometry: geom,
-                  spatialRelationship: "intersects",
-                  returnGeometry: true
-              });
-              counties.queryFeatures(query).then((featureSet) => {
-                  const features = featureSet.features;
-//                  const county = features.attributes.AttributesConstructor
-        //          console.log(features);
-                  const objectIds = features.map(feature => {
-                      return feature.attributes;
-                  });
-                  console.log(objectIds);
-                  console.log(features);
-            
-              // Get list of County Names                  
-              let output = [];
-              for(var i = objectIds.length - 1; i >= 0; i --) {
-    //              output += objectIds[i].NAME;
-                  output.push("'"+objectIds[i].NAME+"'");
-              }
-                console.log(output.join(', ')); 
-//               
-//        // Query projects from list of counties
-          const projectQuery = csgLayer.createQuery();
-          projectQuery.where = "SITE_COUNTY IN " + "(" + output.join(', ') + ")"; 
-        
-          csgLayer.queryFeatures(projectQuery).then((Ids) => {
-              const featuresProjects = Ids.features;
-//              console.log(Ids);
-              console.log(featuresProjects);
-              const projectAttributes = featuresProjects.map(featuresProjects => {
-                  featuresProjects.popupTemplate = csgTemplate;
-                  return featuresProjects;
-              });
-              const projectName = featuresProjects.map(featuresProjects => {
-              return featuresProjects.attributes.Deal_Name;
-              });
-              console.log(projectAttributes);
-              console.log(projectName);
-              
-//              document.getElementById("info").style.visibility = "visible";
-//              document.getElementById("county").innerHTML = projectName;
-              document.getElementById("result-list").innerHTML = "";
-              document.getElementById("result-block").open = true;
-
-              featuresProjects.forEach((result, index) => {
-              const attributes = result.attributes;
-              const item = document.createElement("calcite-list-item");
-              const chip = document.createElement("calcite-chip");
-              chip.value = attributes.SITE_COUNTY;
-              chip.slot = "content-end";
-              chip.scale = "s";
-              chip.innerText = attributes.SITE_COUNTY;
-              item.label = attributes.Deal_Name;
-              item.value = index;
-              item.description = attributes.Program;
-              });
-              //Open popup on click with project feature list
-              view.popup.open({
-                  features: projectAttributes,
-                  featureMenuOpen: true,
-                  updateLocationEnabled: true
-              });
-          });  
-                  
-                  return objectIds
-             });
-
-        });
-      
- 
-          
-                } 
-
-            });
-        });
-
-  
-
-  const legend = new Legend({
+      const legend = new Legend({
       view: view,
       layerInfos: [
           {
               layer: csgLayer
           }
       ]
-  });
-
-  // Add search for Project widget
-  const searchWidget = new Search({
+    });
+      
+    // Add search for Project widget
+    const searchWidget = new Search({
       view: view,
       allPlaceholder: "Search for project",
       includeDefaultSources: false,
@@ -326,20 +224,197 @@
       view: view
   });
 
-  // Add search 
+  // Add search widget
   view.ui.add(searchWidget, {position: "top-right"});
 
-  // Add legend 
+  // Add legend widget
   view.ui.add(legend, "bottom-left");
 
-  //Add Home button
+  //Add Home button widget
   view.ui.add(home, "top-left")
+    
+// ok this literally needs to have functions :((())
+  view.on("click", (event) => { 
 
-  // TO DOs:
-      //Add funtionality where click on anything and get list of projects in that county and all adjacent counties
-      //Search for Project, get list of projects in surrounding counties
+    view.hitTest(event).then((response) => {
+
+      if(response.results.length) {
+      
+      const graphic = response.results[0].graphic;
+      const geom = graphic.geometry;
+
+  
+         view.whenLayerView(graphic.layer).then(function(layerView){
+             
+             //Maybe this should be in a function???/?//
+         
+              const query = counties.createQuery();
+              query.set({
+                  geometry: geom,
+                  spatialRelationship: "intersects",
+                  returnGeometry: true
+              });
+              counties.queryFeatures(query).then((featureSet) => {
+                  const features = featureSet.features;
+//                  const county = features.attributes.AttributesConstructor
+        //          console.log(features);
+                  const objectIds = features.map(feature => {
+                      return feature.attributes;
+                  });
+//                  console.log(objectIds);
+//                  console.log(features);
+            
+              // Get list of County Names                  
+              let output = [];
+              for(var i = objectIds.length - 1; i >= 0; i --) {
+    //              output += objectIds[i].NAME;
+                  output.push("'"+objectIds[i].NAME+"'");
+              }
+//                console.log(output.join(', ')); 
+//               
+//        // Query projects from list of counties
+          const projectQuery = csgLayer.createQuery();
+          projectQuery.where = "SITE_COUNTY IN " + "(" + output.join(', ') + ")"; 
+        
+          csgLayer.queryFeatures(projectQuery).then((Ids) => {
+              const featuresProjects = Ids.features;
+              resultFeatures = featuresProjects;
+//              console.log(Ids);
+//              console.log(featuresProjects);
+              const projectAttributes = featuresProjects.map(featuresProjects => {
+                  featuresProjects.popupTemplate = csgTemplate;
+                  return featuresProjects;
+              });
+              const projectName = featuresProjects.map(featuresProjects => {
+              return featuresProjects.attributes.Deal_Name;
+              });
+//              console.log(projectAttributes);
+//              console.log(projectName);
+
+              document.getElementById("result-list").innerHTML = "";
+              document.getElementById("result-block").open = true;
+
+              featuresProjects.forEach((result, index) => {
+              const attributes = result.attributes;
+              const item = document.createElement("calcite-list-item");
+              const chip = document.createElement("calcite-chip");
+              chip.value = attributes.SITE_COUNTY;
+              chip.slot = "content-end";
+              chip.scale = "s";
+              chip.innerText = attributes.SITE_COUNTY;
+              item.label = attributes.Deal_Name;
+              item.value = index;
+              item.description = attributes.Program;
+              item.addEventListener("click", () => resultClickHandler(result, index));
+              item.appendChild(chip);
+              document.getElementById("result-list").appendChild(item);
+              });
+
+              
+              function resultClickHandler(result, index) {
+              const popup = featuresProjects && featuresProjects[parseInt(index, 10)];
+              console.log(result);
+              if (popup) {
+                view.popup.open({
+                  features: [popup],
+                  location: result.geometry
+                });
+                view.goTo({ center: [result.geometry.longitude, result.geometry.latitude], zoom: 10 }, { duration: 400 });
+              }
+            }
+
+             
+          });  
+                  
+                  return objectIds
+             });
+
+        });
       
  
+          
+                } 
+
+            });
+        });
+      let resultFeatures = [];
+      setupCSV(); 
+//////////// Export to CSV //////////////
+  function setupCSV() {
+//      view.ui.add("download", "top-left");
+      const btn = document.getElementById("download");
+      console.log(resultFeatures);
+      btn.addEventListener("click", () => {
+          if (resultFeatures.length) {
+              //export to csv
+              const attrs = resultFeatures.map(a => a.attributes);
+              const headers = {};
+              const entry = attrs[0];
+              for (let key in entry) {
+                  if (entry.hasOwnProperty(key)) {
+                      headers[key] = key;
+                  }
+              }
+              exportCSVFile(headers, attrs, "export");
+          }
+      });
+  }
+  
+    // export functions
+  // https://medium.com/@danny.pule/export-json-to-csv-file-using-javascript-a0b7bc5b00d2
+  function convertToCSV(objArray) {
+    const array = typeof objArray != "object" ? JSON.parse(objArray) : objArray;
+    let str = "";
+
+    for (let i = 0; i < array.length; i++) {
+      let line = "";
+      for (let index in array[i]) {
+        if (line != "") line += ",";
+
+        line += array[i][index];
+      }
+
+      str += line + "\r\n";
+    }
+
+    return str;
+  }
+
+  function exportCSVFile(headers, items, fileTitle) {
+    if (headers) {
+      items.unshift(headers);
+    }
+
+    // Convert Object to JSON
+    var jsonObject = JSON.stringify(items);
+
+    const csv = convertToCSV(jsonObject);
+
+    const exportedFilenmae = fileTitle + ".csv" || "export.csv";
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    if (navigator.msSaveBlob) {
+      // IE 10+
+      navigator.msSaveBlob(blob, exportedFilenmae);
+    } else {
+      const link = document.createElement("a");
+      if (link.download !== undefined) {
+        // feature detection
+        // Browsers that support HTML5 download attribute
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", exportedFilenmae);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  }
+
+
+
+
 
   console.log("BOTTOM OF REQUIRE");
 });

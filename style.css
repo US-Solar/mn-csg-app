@@ -19,6 +19,10 @@ body,
     font-size: 24pt;
 }
 
+.container {
+    position: relative;
+}
+
 .header img {
     height: 40px;
     margin: 0 8px 0 8px;
@@ -32,7 +36,7 @@ body,
 }
 
 .projects-list {
-    --calcite-ui-brand: #039851;
+    --calcite-ui-brand: #FAA21A;
     --calcite-ui-brand-hover: #008D52;
 }
 
@@ -41,6 +45,7 @@ body,
       --calcite-ui-text-1: white;
       margin-inline-end: .75rem;    
 }
+
 
 /*
 #info {

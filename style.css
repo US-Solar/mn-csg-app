@@ -1,0 +1,53 @@
+html,
+body,
+#heading {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.header{
+    text-align: left;
+    background: #FFFFFF;
+    color: #818386;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    font-family: 'Plus Jakarta Display',sans-serif;
+    font-weight: bolder;
+    font-size: 24pt;
+}
+
+.header img {
+    height: 40px;
+    margin: 0 8px 0 8px;
+}
+
+#viewDiv {
+    padding: 0;
+    margin: 0;
+    height: calc(100% - 44px);
+    width: 100%
+}
+
+.projects-list {
+    --calcite-ui-brand: #039851;
+    --calcite-ui-brand-hover: #008D52;
+}
+
+.projects-list calcite-chip {
+      --calcite-ui-foreground-2: var(--calcite-ui-brand);
+      --calcite-ui-text-1: white;
+      margin-inline-end: .75rem;    
+}
+
+/*
+#info {
+    background-color: white;
+    opacity: 0.75;
+    color: #818386;
+    font-size: 18pt;
+    padding: 8px;
+    visibility: hidden;
+}*/

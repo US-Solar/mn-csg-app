@@ -280,7 +280,6 @@
               const featuresProjects = Ids.features;
               resultFeatures = featuresProjects;
 //              console.log(Ids);
-//              console.log(featuresProjects);
               const projectAttributes = featuresProjects.map(featuresProjects => {
                   featuresProjects.popupTemplate = csgTemplate;
                   return featuresProjects;
@@ -293,6 +292,9 @@
 
               document.getElementById("result-list").innerHTML = "";
               document.getElementById("result-block").open = true;
+              count = "("+featuresProjects.length+")";
+              document.getElementById("result-block").setAttribute("summary", count);
+              
 
               featuresProjects.forEach((result, index) => {
               const attributes = result.attributes;
@@ -321,29 +323,23 @@
                 });
                 view.goTo({ center: [result.geometry.longitude, result.geometry.latitude], zoom: 10 }, { duration: 400 });
               }
-            }
-
-             
+            }   
           });  
-                  
-                  return objectIds
-             });
-
-        });
+           return objectIds
+          });
+         });
+        } 
+       });
+      });
       
- 
-          
-                } 
-
-            });
-        });
+      
       let resultFeatures = [];
       setupCSV(); 
+      
 //////////// Export to CSV //////////////
   function setupCSV() {
-//      view.ui.add("download", "top-left");
-      const btn = document.getElementById("download");
-      console.log(resultFeatures);
+      const btn = document.getElementById("btn-export");
+//      console.log(resultFeatures);
       btn.addEventListener("click", () => {
           if (resultFeatures.length) {
               //export to csv
@@ -355,12 +351,12 @@
                       headers[key] = key;
                   }
               }
-              exportCSVFile(headers, attrs, "export");
+              exportCSVFile(headers, attrs, "Projects Adjacent to "+view.popup.title);
           }
       });
   }
   
-    // export functions
+  // export functions
   // https://medium.com/@danny.pule/export-json-to-csv-file-using-javascript-a0b7bc5b00d2
   function convertToCSV(objArray) {
     const array = typeof objArray != "object" ? JSON.parse(objArray) : objArray;
@@ -411,9 +407,6 @@
       }
     }
   }
-
-
-
 
 
   console.log("BOTTOM OF REQUIRE");

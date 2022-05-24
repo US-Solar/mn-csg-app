@@ -48,11 +48,12 @@
    
     <calcite-shell class="projects-list" style="top: 47px">
     <calcite-shell-panel slot="primary-panel">
-        <calcite-panel heading="Projects in Adjacent Counties">
+        <calcite-panel heading="Projects in Adjacent Counties" summary="Click a county to view projects">
             <calcite-block collapsible heading="Results" id="result-block">
-            <div id="btn-export">
-                <calcite-icon icon="download" scale="m"></calcite-icon>
-            </div>
+            <calcite-button color="neutral" id="btn-export" style="height:35px">
+                <calcite-icon icon="download" scale="m" id="download"></calcite-icon>
+                <calcite-tooltip label="Download CSV" reference-element="download" offset-distance="1">Download CSV of Results</calcite-tooltip>
+            </calcite-button>
             <calcite-list id="result-list"></calcite-list>
             </calcite-block>
         </calcite-panel>

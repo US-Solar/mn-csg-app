@@ -6,7 +6,8 @@
       "esri/widgets/Legend",
       "esri/widgets/Search",
       "esri/widgets/Home",
-    ], function (esriConfig,Map, MapView, FeatureLayer, Legend, Search, Home) {
+      "esri/popup/content/TextContent"
+    ], function (esriConfig,Map, MapView, FeatureLayer, Legend, Search, Home, TextContent) {
 
   // TOP of REQUIRE
   console.log("TOP OF REQUIRE");
@@ -147,7 +148,7 @@
             lable: "Site Acres"
         }]
     }]
-  };
+  }; 
       
   const csgLayer = new FeatureLayer({
       url: "https://services5.arcgis.com/V5xqUDxoOJurLR4H/arcgis/rest/services/MN_USS_Sites_Won_Centroids/FeatureServer/0",
@@ -163,7 +164,7 @@
   //Create the map
   const map = new Map({
       basemap: "arcgis-topographic", // Basemap layer
-      layers: [counties, csgLayer]
+      layers: [csgLayer, counties]
   });
 
   //Create the view
@@ -233,20 +234,28 @@
   //Add Home button widget
   view.ui.add(home, "top-left")
     
-// ok this literally needs to have functions :((())
   view.on("click", (event) => { 
-
-    view.hitTest(event).then((response) => {
-
+    const opts = {
+          include: counties
+      }
+    view.hitTest(event, opts).then((response) => {
+        
       if(response.results.length) {
       
       const graphic = response.results[0].graphic;
       const geom = graphic.geometry;
-
-  
-         view.whenLayerView(graphic.layer).then(function(layerView){
-             
-             //Maybe this should be in a function???/?//
+          
+      //Attempt to fix the query issue by zooming in before querying....    
+      //only works when you click a second time....
+          
+      view.goTo({
+          center: [geom.centroid.longitude, geom.centroid.latitude], zoom: 9
+      });
+//          console.log([geom.centroid.longitude, geom.centroid.latitude]);
+//          console.log(geom);
+          
+          // Found I don't need this because I'm not doing highlights....
+//         view.whenLayerView(graphic.layer).then(function(layerView){
          
               const query = counties.createQuery();
               query.set({
@@ -270,8 +279,13 @@
     //              output += objectIds[i].NAME;
                   output.push("'"+objectIds[i].NAME+"'");
               }
-//                console.log(output.join(', ')); 
-//               
+                console.log(output.join(', ')); 
+            
+            // Update counties popup with list of neighboring counties....doesn't initialize wihtout a second click
+            let textElement = new TextContent();
+            textElement.text = "Neighboring Counties: " + output.join(', ');
+            counties.popupTemplate.content =  [textElement]
+                  
 //        // Query projects from list of counties
           const projectQuery = csgLayer.createQuery();
           projectQuery.where = "SITE_COUNTY IN " + "(" + output.join(', ') + ")"; 
@@ -327,7 +341,7 @@
           });  
            return objectIds
           });
-         });
+//         });
         } 
        });
       });

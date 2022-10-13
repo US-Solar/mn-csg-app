@@ -22,10 +22,30 @@
 //      console.log(arcadeScript)
 //      console.log(countiesTemplate)
 
+  const countyLabels = {
+      symbol: {
+          type: "text",
+          color: "#404040",
+          haloColor: [164,164,164, 0.25],
+          haloSize: "1.5px",
+          font: {
+            size: "11px",
+            family: "Montserrat",
+                style: "italic",
+            weight: "normal"
+          }
+        },
+
+        labelPlacement: "above-center",
+        labelExpressionInfo: {
+            expression: "$feature.NAME"
+        }
+      };
+        
   const counties = new FeatureLayer({
     url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Counties_Generalized/FeatureServer/0",
     title: "USA Counties (Generalized)",
-    outFields: ["*"],
+    outFields: ["NAME"],
     renderer: {
     type: "simple",
     symbol: {
@@ -37,25 +57,26 @@
             }
         }
     },
+    labelingInfo: [countyLabels],  
     definitionExpression: "STATE_NAME = 'Minnesota'",
     spatialReference: {wkid: 3857},
     opacity: "0.7",   
   });
 
 
-  // County layer popup 
-  counties.popupTemplate = {
-      title: "{NAME} County"
-//      content: [{
-//          type: "fields",
-//          fieldInfos: [{
-//              fieldName: "expression/surrounding_counties"}]
-//          }],
-//      expressionInfos:[{
-//          name: "surrounding_counties",
-//          title: "Bordering Counties",
-//          expression: arcadeScript}]
-  };
+//  // County layer popup 
+//  counties.popupTemplate = {
+//      title: "{NAME} County"
+////      content: [{
+////          type: "fields",
+////          fieldInfos: [{
+////              fieldName: "expression/surrounding_counties"}]
+////          }],
+////      expressionInfos:[{
+////          name: "surrounding_counties",
+////          title: "Bordering Counties",
+////          expression: arcadeScript}]
+//  };
 
 
 
@@ -117,7 +138,7 @@
           haloColor: "#FFFFFF",
           haloSize: "2px",
           font: {
-            size: "12px",
+            size: "13px",
             family: "Noto Sans",
 //                style: "italic",
             weight: "normal"
@@ -126,7 +147,7 @@
 
         labelPlacement: "above-center",
         labelExpressionInfo: {
-            expression: "$feature.Deal_Name"
+            expression: "Replace(Replace($feature.Deal_Name, 'Solar LLC', ''), 'USS', '')"
         }
       };
 
@@ -178,8 +199,8 @@
             position: "bottom-right"
         }
     },
-    center: [-94.6859, 46.4296], //moved when adding the header
-//        center: [-94.6859, 46.7296],
+    center: [-93.6984, 46.4296], //moved when adding the header
+//        center: [-95.8984, 46.4296],
     zoom: 7, // scale: 72223.819286
     container: "viewDiv",
     spatialReference: {
@@ -233,13 +254,17 @@
 
   //Add Home button widget
   view.ui.add(home, "top-left")
-    
-  view.on("click", (event) => { 
+  
+      
+  /////////////////// Query Events//////////////////////////////
+  let highlight;
+  view.on("pointer-down", (event) => { 
     const opts = {
           include: counties
       }
+      console.log(event);
     view.hitTest(event, opts).then((response) => {
-        
+      console.log(response);
       if(response.results.length) {
       
       const graphic = response.results[0].graphic;
@@ -248,43 +273,58 @@
       //Attempt to fix the query issue by zooming in before querying....    
       //only works when you click a second time....
           
-      view.goTo({
-          center: [geom.centroid.longitude, geom.centroid.latitude], zoom: 9
-      });
+//      view.goTo({
+//          center: [geom.centroid.longitude, geom.centroid.latitude], zoom: 9
+//      })
 //          console.log([geom.centroid.longitude, geom.centroid.latitude]);
 //          console.log(geom);
-          
-          // Found I don't need this because I'm not doing highlights....
-//         view.whenLayerView(graphic.layer).then(function(layerView){
+//          console.log(graphic);
+//
+//          console.log(graphic.layer);
+         // Found I don't need this because I'm not doing highlights....
+         view.whenLayerView(graphic.layer).then(function(layerView){
          
               const query = counties.createQuery();
               query.set({
                   geometry: geom,
                   spatialRelationship: "intersects",
-                  returnGeometry: true
+                  returnGeometry: true,
+                  orderByFields: ["NAME DESC"]
               });
               counties.queryFeatures(query).then((featureSet) => {
                   const features = featureSet.features;
 //                  const county = features.attributes.AttributesConstructor
-        //          console.log(features);
+//                  console.log(features);
                   const objectIds = features.map(feature => {
                       return feature.attributes;
                   });
-//                  console.log(objectIds);
+                  console.log(objectIds);
 //                  console.log(features);
-            
+              if (highlight) {
+                  highlight.remove();
+              }
+              highlight = layerView.highlight(features);
+                  
               // Get list of County Names                  
               let output = [];
+              let outputPopup = [];
               for(var i = objectIds.length - 1; i >= 0; i --) {
-    //              output += objectIds[i].NAME;
+                  outputPopup.push(objectIds[i].NAME);
                   output.push("'"+objectIds[i].NAME+"'");
               }
                 console.log(output.join(', ')); 
+                console.log(output);
+                console.log(outputPopup);
             
-            // Update counties popup with list of neighboring counties....doesn't initialize wihtout a second click
+            // Update counties popup with list of neighboring counties
+            counties.popupTemplate = {
+                  title: "{NAME} County"
+              };
             let textElement = new TextContent();
-            textElement.text = "Neighboring Counties: " + output.join(', ');
-            counties.popupTemplate.content =  [textElement]
+            textElement.text = "Eligible Counties: " + output.join(', ');
+            
+            counties.popupTemplate.content = "<p><b>Eligible Counties</b></p>"+output.join('<p>');
+            console.log(textElement);
                   
 //        // Query projects from list of counties
           const projectQuery = csgLayer.createQuery();
@@ -293,7 +333,7 @@
           csgLayer.queryFeatures(projectQuery).then((Ids) => {
               const featuresProjects = Ids.features;
               resultFeatures = featuresProjects;
-//              console.log(Ids);
+              console.log(Ids);
               const projectAttributes = featuresProjects.map(featuresProjects => {
                   featuresProjects.popupTemplate = csgTemplate;
                   return featuresProjects;
@@ -341,9 +381,12 @@
           });  
            return objectIds
           });
-//         });
+         });
         } 
-       });
+       })
+       .catch(function(error) {
+            console.log(error);
+        });
       });
       
       
@@ -421,7 +464,6 @@
       }
     }
   }
-
 
   console.log("BOTTOM OF REQUIRE");
 });

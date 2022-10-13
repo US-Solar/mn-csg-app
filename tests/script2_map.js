@@ -2,30 +2,56 @@
      "esri/config",
       "esri/Map",
       "esri/views/MapView",
+      "esri/WebMap",
       "esri/layers/FeatureLayer",
       "esri/widgets/Legend",
       "esri/widgets/Search",
       "esri/widgets/Home",
-    ], function (esriConfig,Map, MapView, FeatureLayer, Legend, Search, Home) {
+      "esri/popup/content/TextContent"
+    ], function (esriConfig,Map, MapView, WebMap, FeatureLayer, Legend, Search, Home, TextContent) {
 
   // TOP of REQUIRE
   console.log("TOP OF REQUIRE");
-  
-  esriConfig.apiKey = "AAPKc484c74fa23948cabcfac16c7aeb0686pq_j3wO_RKSRk5XKsXRfce7zvJdWILL_CQKtXpQW0s0RiIj9nhYN3OT9FnQ9LbzY";
+  const webmapId = new URLSearchParams(window.location.search).get("webmap") ?? "8468f4f6ce3c4151883eab89b2020935"; // original 
+        //"c840c7c265ff4188a8fff535f8eba389" //dev map
 
+  const map = new WebMap({
+    portalItem: {
+      id: webmapId
+    }
+  });
   
+  //  //Create the view
+  const view = new MapView({
+    map: map,
+    popup: {
+        dockEnabled: true,
+        dockOptions:{
+            buttonEnabled: true,
+            breakpoint: false,
+            position: "bottom-right"
+        }
+    },
+    center: [-93.6984, 46.4296], //moved when adding the header
+//        center: [-95.8984, 46.4296],
+    zoom: 7, // scale: 72223.819286
+    container: "viewDiv",
+    spatialReference: {
+        wkid: 3857
+    },
+    constraints: {
+      snapToZoom: false
+    }
+  });
       
-  // Arcade Script
-  const arcadeScript = document.getElementById("projects-arcade").text;
-
-//      console.log(arcadeScript)
-//      console.log(countiesTemplate)
-
-  const counties = new FeatureLayer({
-    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Counties_Generalized/FeatureServer/0",
-    title: "USA Counties (Generalized)",
-    outFields: ["*"],
-    renderer: {
+  console.log(map.layers);
+  
+  view.when().then(function () {
+  const counties = map.layers.getItemAt(0);
+  const csgLayer = map.layers.getItemAt(1); 
+  console.log(csgLayer);
+  counties.outFields = ["NAME"];
+  counties.renderer = {
     type: "simple",
     symbol: {
         type: "simple-fill",
@@ -35,14 +61,42 @@
             width: "1px"
             }
         }
-    },
-    definitionExpression: "STATE_NAME = 'Minnesota'",
-    spatialReference: {wkid: 3857},
-    opacity: "0.7",   
-  });
+    }
+    counties.definitionExpression = "STATE_NAME = 'Minnesota'"
+    counties.spatialReference = {wkid: 3857}
+    counties.opacity = "0.7"  
 
+      
+//  esriConfig.apiKey = "AAPKc484c74fa23948cabcfac16c7aeb0686pq_j3wO_RKSRk5XKsXRfce7zvJdWILL_CQKtXpQW0s0RiIj9nhYN3OT9FnQ9LbzY";
 
-  // County layer popup 
+  // Arcade Script
+  const arcadeScript = document.getElementById("projects-arcade").text;
+
+//      console.log(arcadeScript)
+//      console.log(countiesTemplate)
+//
+//  const counties = new FeatureLayer({
+//    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Counties_Generalized/FeatureServer/0",
+//    title: "USA Counties (Generalized)",
+//    outFields: ["NAME"],
+//    renderer: {
+//    type: "simple",
+//    symbol: {
+//        type: "simple-fill",
+////            style: "none",
+//        outline: { 
+//            color: "#FFFFFF",
+//            width: "1px"
+//            }
+//        }
+//    },
+//    definitionExpression: "STATE_NAME = 'Minnesota'",
+//    spatialReference: {wkid: 3857},
+//    opacity: "0.7",   
+//  });
+//
+//
+////  // County layer popup 
   counties.popupTemplate = {
       title: "{NAME} County"
 //      content: [{
@@ -55,10 +109,10 @@
 //          title: "Bordering Counties",
 //          expression: arcadeScript}]
   };
-
-
-
-  // Style csgLayer by 'Program' renderer
+//
+//
+//
+//  // Style csgLayer by 'Program' renderer
   const csgRenderer = {
    type: "unique-value",
    field: "Program",
@@ -107,8 +161,10 @@
         } 
     }]
   };
-
-  // Set csg labeling info
+      
+  
+//
+//  // Set csg labeling info
   const csgLabels = {
       symbol: {
           type: "text",
@@ -128,8 +184,8 @@
             expression: "$feature.Deal_Name"
         }
       };
-
-  // CSG Popup template
+//
+//  // CSG Popup template
   const csgTemplate = {
     title: "{Deal_Name}",
     content: [{
@@ -147,72 +203,34 @@
             lable: "Site Acres"
         }]
     }]
-  };
-      
- const csgTemplateTEST = {
-    title: "{Deal_Name}",
-    content: [{
-        type: "fields",
-        fieldInfos: [{
-            fieldName: "Program",
-            label: "Program",               
-        }, {
-            fieldName: "SITE_COUNTY",
-            label: "County"
-        },{
-            fieldName: "Stage",
-        },{
-            fieldName: "Premises_Acres",
-            lable: "Site Acres"
-        }]
-    }]
-  };
-     
-      
-  const csgLayer = new FeatureLayer({
-      url: "https://services5.arcgis.com/V5xqUDxoOJurLR4H/arcgis/rest/services/MN_USS_Sites_Won_Centroids/FeatureServer/0",
-      renderer: csgRenderer,
-      labelingInfo: [csgLabels],
-      legendEnabled: true,
-      title: "MN USS CSG Sites Won",
-      spatialReference: {wkid: 3857},
-      popupTemplate: csgTemplateTEST
-  });
-   
-      
-  //Create the map
-  const map = new Map({
-      basemap: "arcgis-topographic", // Basemap layer
-      layers: [csgLayer, counties]
-  });
+  }; 
+//  
+    csgLayer.renderer = csgRenderer;
+    csgLayer.labelingInfo = csgLabels;
+    csgLayer.popupTemplate = csgTemplate;  
+//  const csgLayer = new FeatureLayer({
+//      url: "https://services5.arcgis.com/V5xqUDxoOJurLR4H/arcgis/rest/services/MN_USS_Sites_Won_Centroids/FeatureServer/0",
+//      renderer: csgRenderer,
+//      labelingInfo: [csgLabels],
+//      legendEnabled: true,
+//      title: "MN USS CSG Sites Won",
+//      spatialReference: {wkid: 3857},
+//      popupTemplate: csgTemplate
+//  });
+//   
+//      
+//  //Create the map
+//  const map = new Map({
+//      basemap: "arcgis-topographic", // Basemap layer
+//      layers: [csgLayer, counties]
+//  });
+//
 
-  //Create the view
-  const view = new MapView({
-    map: map,
-    popup: {
-        dockEnabled: true,
-        dockOptions:{
-            buttonEnabled: true,
-            breakpoint: false,
-            position: "bottom-right"
-        }
-    },
-    center: [-94.6859, 46.4296], //moved when adding the header
-//        center: [-94.6859, 46.7296],
-    zoom: 7, // scale: 72223.819286
-    container: "viewDiv",
-    spatialReference: {
-        wkid: 3857
-    },
-    constraints: {
-      snapToZoom: false
-    }
-  });
-    
-    // Add Layers to map
-    map.add(counties);
-    map.add(csgLayer);
-      
+//    
+//    // Add Layers to map
+//    map.add(counties);
+//    map.add(csgLayer);
+//      
       const legend = new Legend({
       view: view,
       layerInfos: [
@@ -252,52 +270,93 @@
 
   //Add Home button widget
   view.ui.add(home, "top-left")
-    
-// ok this literally needs to have functions :((())
-  view.on("click", (event) => { 
-      const opts = {
+//  
+//      
+//  /////////////////// Query Events//////////////////////////////
+  let highlight;
+  view.on("pointer-down", (event) => { 
+    const opts = {
           include: counties
       }
+      console.log(event);
     view.hitTest(event, opts).then((response) => {
-
+      console.log(response);
       if(response.results.length) {
       
       const graphic = response.results[0].graphic;
       const geom = graphic.geometry;
-      console.log(geom.centroid.latitude)
-      
-      //Attempt to fix the query issue by zooming in before querying....      
+          
+      //Attempt to fix the query issue by zooming in before querying....    
+      //only works when you click a second time....
+          
       view.goTo({
           center: [geom.centroid.longitude, geom.centroid.latitude], zoom: 9
-      });
-  
-         view.whenLayerView(graphic.layer).then(function(layerView){
+      })
+//          console.log([geom.centroid.longitude, geom.centroid.latitude]);
+//          console.log(geom);
+//          console.log(graphic);
+//
+//          console.log(graphic.layer);
+         // Found I don't need this because I'm not doing highlights....
+//         view.whenLayerView(graphic.layer)
+          .then(getCounties)
+          .then(countiesList)
          
-              const query = counties.createQuery();
-              query.set({
+           function getCounties (geom) {
+               
+               const query = counties.createQuery();
+               query.set({
                   geometry: geom,
                   spatialRelationship: "intersects",
-                  returnGeometry: true
-              });
-              counties.queryFeatures(query).then((featureSet) => {
+                  returnGeometry: true,
+                  orderByFields: ["NAME DESC"]
+               });
+               counties.queryFeatures(query).then((featureSet) => {
                   const features = featureSet.features;
 //                  const county = features.attributes.AttributesConstructor
-        //          console.log(features);
+//                  console.log(features);
                   const objectIds = features.map(feature => {
                       return feature.attributes;
-                  });
-                  
+                  }); 
                   console.log(objectIds);
-//                  console.log(features);
+                  return objectIds
+               });
+           }   
             
+           
+          
+           function countiesList (objectIds) {
               // Get list of County Names                  
               let output = [];
+              let outputPopup = [];
               for(var i = objectIds.length - 1; i >= 0; i --) {
-    //              output += objectIds[i].NAME;
+                  outputPopup.push(objectIds[i].NAME);
                   output.push("'"+objectIds[i].NAME+"'");
               }
                 console.log(output.join(', ')); 
-//               
+                console.log(output);
+                console.log(outputPopup);
+                let textElement = new TextContent();
+                textElement.text = "Neighboring Counties: " + output.join(', ');
+
+                counties.popupTemplate.content = "<p><b>Neighboring Counties</b></p>"+output.join('<p>');
+                console.log(textElement);
+              return output 
+           }       
+//                  console.log(features);
+//              if (highlight) {
+//                  highlight.remove();
+//              }
+//              highlight = layerView.highlight(features);
+                  
+           
+            
+            // Update counties popup with list of neighboring counties
+//            counties.popupTemplate = {
+//                  title: "{NAME} County"
+//              };
+          
+                  
 //        // Query projects from list of counties
           const projectQuery = csgLayer.createQuery();
           projectQuery.where = "SITE_COUNTY IN " + "(" + output.join(', ') + ")"; 
@@ -350,12 +409,15 @@
                 view.goTo({ center: [result.geometry.longitude, result.geometry.latitude], zoom: 10 }, { duration: 400 });
               }
             }   
-          });  
-           return objectIds
-          });
+//          });  
+//           return objectIds
+//          });
          });
         } 
-       });
+       })
+       .catch(function(error) {
+            console.log(error);
+        });
       });
       
       
@@ -434,6 +496,6 @@
     }
   }
 
-
   console.log("BOTTOM OF REQUIRE");
+      });
 });

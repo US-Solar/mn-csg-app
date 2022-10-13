@@ -21,6 +21,21 @@
 //      console.log(arcadeScript)
 //      console.log(countiesTemplate)
 
+  const soils = new FeatureLayer ({
+      url: "https://landscape11.arcgis.com/arcgis/rest/services/USA_Soils_Map_Units/featureserver/0",
+      outFields: ["objectid"]
+//      renderer: {
+//        type: "simple",
+//        symbol: {
+//            type: "simple-fill",
+//    //            style: "none",
+//            outline: { 
+//                color: "#FFFFFF",
+//                width: "1px"
+//                }
+//            }
+//        }
+  });
   const counties = new FeatureLayer({
     url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Counties_Generalized/FeatureServer/0",
     title: "USA Counties (Generalized)",
@@ -165,7 +180,7 @@
     //Create the map
   const map = new Map({
       basemap: "arcgis-topographic", // Basemap layer
-      layers: [counties, csgLayer]
+      layers: [counties, csgLayer, soils]
   });
 
   //Create the view
@@ -193,131 +208,14 @@
       
     map.add(counties);
     map.add(csgLayer);
+    map.add(soils);
     
     console.log(counties.popupTemplate.content.fieldInfos)
       
   //Click event on counties to highlight surrounding counties
-  view.ui.add("info", "top-right");
+//  view.ui.add("info", "top-right");
   
-  view
-    .when()
-    .then(() => {
-      return counties.when();
-  })
-    .then((layer) => {
-      const renderer = layer.renderer.clone();
-      renderer.symbol.width = 4;
-      renderer.symbol.color = [128, 128, 128, 0.8];
-      layer.renderer = renderer;
-      
-      return view.whenLayerView(layer);
-  })
-    .then((layerView) => {
-      view.on("pointer-move", eventHandler);
-      view.on("pointer-down", eventHandler);
-      
-      function eventHandler(event) {
-        //only include graphics from counties in the hitTest
-        const opts = {
-            include: counties
-        };
-        //the hitTest() chckes to see if any graphics from the counties layer
-        //intersect the x, y coordinates of the pointer
-          view.hitTest(event, opts).then(getGraphics);
-      }
-      
-      let highlight, currentId, currentName;
-      
-      function getGraphics(response) {
-          //the topmost graphic from counties layer
-          //and display select attribute values
-          if (response.results.length) {
-              const graphic = response.results[0].graphic;
-              
-              const attributes = graphic.attributes;
-              const county = attributes.NAME;
-              const state = attributes.STATE_NAME;
-              const id = attributes.FID;
-              
-              if (
-                highlight &&
-                (currentName !== name || currentId !== id)
-              ) {
-                highlight.remove();
-                highlight = null;
-                return;
-              }
-              
-              if (highlight) {
-                  return;
-              }
-              
-              document.getElementById("info").style.visibility = "visible";
-              document.getElementById("county").innerHTML = county + " County";
-              document.getElementById("state").innerHTML = state;
-              
-              //highlights all features belonging to the same state
-              const query = layerView.createQuery();
-              query.where = "NAME = '" + county + "'";
-              // Try to do it with Spatial query
-//              query.geometry = view.toMap(event);
-//              query.distance = 200;
-//              query.unites = "miles";
-//              query.spatialRelationship = "intersects";
-              query.returnGeometry = true;
-//              query.outfields = ["NAME","STATE_NAME"];
-//              query.outSpatialReference = this.view.spatialReference
-              
-              layerView.queryFeatures(query).then((ids) => {
-//                console.log(response.features[0].attributes)
-//              layerView.queryFeatures(query).then((ids) => {
-//                      console.log(response.features[0])
-                  
-                  
-                  const features = ids.features;
-//                  console.log(features);
-//                  console.log(features.graphics)
-                  const attributeData = features.map(feature => {
-                      return feature.attributes;
-                  });
-                  const geometryData = features.map(feature => {
-                      return feature.geometry;
-                  })
-//                  console.log(attributeData);
-                  console.log(geometryData);
-//                  console.log(ids.geometryType)
-//                  console.log(ids.queryGeometry)
-                  
-                  
-                  // Instead of highlighting this query, I need to pass this result into a spatial query 
-                  //and highlight that
-//                  const spatial_query = layerView.createQuery();
-//                  query.geometry = geometryData.polygon;
-//                  query.spatialRelationship = "intersects";
-                  
-//                  layerView.queryObjectIds(spatial_query).then((id) => {
-                      console.log(ids.features);
-                  
-                      if (highlight) {
-                      highlight.remove();
-                  }
-                  highlight = layerView.highlight(id);
-                  currentName = name;
-                  currentId = id;
-               
-              });
-          } else {
-              //remove the highlight if no features are returned from the hitTest
-              if (highlight) {
-                  highlight.remove();
-                  highlight = null;
-              }
-              document.getElementById("info").style.visibility = "hidden";
-          }
-      }
-  });
-  
-//    view
+//  view
 //    .when()
 //    .then(() => {
 //      return counties.when();
@@ -330,43 +228,161 @@
 //      
 //      return view.whenLayerView(layer);
 //  })
-//  
-//  .then((layerView) => {
-//  view.on("pointer-move", eventHandler);
-//  view.on("pointer-down", eventHandler);
-//
-//  function eventHandler(event) {
-//    //only include graphics from counties in the hitTest
-//    const opts = {
-//        include: counties
-//    };
-//    //the hitTest() chckes to see if any graphics from the counties layer
-//    //intersect the x, y coordinates of the pointer
-//      view.hitTest(event, opts).then(getGraphics);
-//  }
-//        
-//  //Spatial Query
-//  let highlight;
-//  view.on("pointer-move", function(event){
-////    view.whenLayerView(counties).then(function(layerView){
-//    let query = layerView.createQuery();
-//    query.geometry = view.toMap(event);
-//    query.distance = 200;
-//    query.units = "miles";
-//    query.spatialRelationship = "intersects";
-//    query.returnGeometry = true;
-//    query.outfields = ["NAME","STATE_NAME"];
-//    
-//    layerView.queryFeatures(query)
-//      .then(function(result){
-//            if (highlight) {
-//                highlight.remove();
-//               }
-//               highlight = layerView.highlight(result.features);
-//              })
-//            });
-//});
+//    .then((layerView) => {
+//      view.on("pointer-move", eventHandler);
+//      view.on("pointer-down", eventHandler);
 //      
+//      function eventHandler(event) {
+//        //only include graphics from counties in the hitTest
+//        const opts = {
+//            include: counties
+//        };
+//        //the hitTest() chckes to see if any graphics from the counties layer
+//        //intersect the x, y coordinates of the pointer
+//          view.hitTest(event, opts).then(getGraphics);
+//      }
+//      
+//      let highlight, currentId, currentName;
+//      
+//      function getGraphics(response) {
+//          //the topmost graphic from counties layer
+//          //and display select attribute values
+//          if (response.results.length) {
+//              const graphic = response.results[0].graphic;
+//              
+//              const attributes = graphic.attributes;
+//              const county = attributes.NAME;
+//              const state = attributes.STATE_NAME;
+//              const id = attributes.FID;
+//              
+//              if (
+//                highlight &&
+//                (currentName !== name || currentId !== id)
+//              ) {
+//                highlight.remove();
+//                highlight = null;
+//                return;
+//              }
+//              
+//              if (highlight) {
+//                  return;
+//              }
+//              
+//              document.getElementById("info").style.visibility = "visible";
+//              document.getElementById("county").innerHTML = county + " County";
+//              document.getElementById("state").innerHTML = state;
+//              
+//              //highlights all features belonging to the same state
+//              const query = layerView.createQuery();
+//              query.where = "NAME = '" + county + "'";
+//              // Try to do it with Spatial query
+////              query.geometry = view.toMap(event);
+////              query.distance = 200;
+////              query.unites = "miles";
+////              query.spatialRelationship = "intersects";
+//              query.returnGeometry = true;
+////              query.outfields = ["NAME","STATE_NAME"];
+////              query.outSpatialReference = this.view.spatialReference
+//              
+//              layerView.queryFeatures(query).then((ids) => {
+////                console.log(response.features[0].attributes)
+////              layerView.queryFeatures(query).then((ids) => {
+////                      console.log(response.features[0])
+//                  
+//                  
+//                  const features = ids.features;
+////                  console.log(features);
+////                  console.log(features.graphics)
+//                  const attributeData = features.map(feature => {
+//                      return feature.attributes;
+//                  });
+//                  const geometryData = features.map(feature => {
+//                      return feature.geometry;
+//                  })
+////                  console.log(attributeData);
+//                  console.log(geometryData);
+////                  console.log(ids.geometryType)
+////                  console.log(ids.queryGeometry)
+//                  
+//                  
+//                  // Instead of highlighting this query, I need to pass this result into a spatial query 
+//                  //and highlight that
+////                  const spatial_query = layerView.createQuery();
+////                  query.geometry = geometryData.polygon;
+////                  query.spatialRelationship = "intersects";
+//                  
+////                  layerView.queryObjectIds(spatial_query).then((id) => {
+//                      console.log(ids.features);
+//                  
+//                      if (highlight) {
+//                      highlight.remove();
+//                  }
+//                  highlight = layerView.highlight(id);
+//                  currentName = name;
+//                  currentId = id;
+//               
+//              });
+//          } else {
+//              //remove the highlight if no features are returned from the hitTest
+//              if (highlight) {
+//                  highlight.remove();
+//                  highlight = null;
+//              }
+//              document.getElementById("info").style.visibility = "hidden";
+//          }
+//      }
+//  });
+//  
+////    view
+////    .when()
+////    .then(() => {
+////      return counties.when();
+////  })
+////    .then((layer) => {
+////      const renderer = layer.renderer.clone();
+////      renderer.symbol.width = 4;
+////      renderer.symbol.color = [128, 128, 128, 0.8];
+////      layer.renderer = renderer;
+////      
+////      return view.whenLayerView(layer);
+////  })
+////  
+////  .then((layerView) => {
+////  view.on("pointer-move", eventHandler);
+////  view.on("pointer-down", eventHandler);
+////
+////  function eventHandler(event) {
+////    //only include graphics from counties in the hitTest
+////    const opts = {
+////        include: counties
+////    };
+////    //the hitTest() chckes to see if any graphics from the counties layer
+////    //intersect the x, y coordinates of the pointer
+////      view.hitTest(event, opts).then(getGraphics);
+////  }
+////        
+////  //Spatial Query
+////  let highlight;
+////  view.on("pointer-move", function(event){
+//////    view.whenLayerView(counties).then(function(layerView){
+////    let query = layerView.createQuery();
+////    query.geometry = view.toMap(event);
+////    query.distance = 200;
+////    query.units = "miles";
+////    query.spatialRelationship = "intersects";
+////    query.returnGeometry = true;
+////    query.outfields = ["NAME","STATE_NAME"];
+////    
+////    layerView.queryFeatures(query)
+////      .then(function(result){
+////            if (highlight) {
+////                highlight.remove();
+////               }
+////               highlight = layerView.highlight(result.features);
+////              })
+////            });
+////});
+////      
   const legend = new Legend({
       view: view,
       layerInfos: [

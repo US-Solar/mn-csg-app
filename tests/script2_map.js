@@ -7,8 +7,9 @@
       "esri/widgets/Legend",
       "esri/widgets/Search",
       "esri/widgets/Home",
-      "esri/popup/content/TextContent"
-    ], function (esriConfig,Map, MapView, WebMap, FeatureLayer, Legend, Search, Home, TextContent) {
+      "esri/popup/content/TextContent",
+      "esri/widgets/Editor"
+    ], function (esriConfig,Map, MapView, WebMap, FeatureLayer, Legend, Search, Home, TextContent, Editor) {
 
   // TOP of REQUIRE
   console.log("TOP OF REQUIRE");
@@ -270,6 +271,17 @@
 
   //Add Home button widget
   view.ui.add(home, "top-left")
+      
+      
+  const editor = new Editor({
+      view: view,
+      snappingOptions: {
+          enabled: true
+      }
+    });
+
+  view.ui.add(editor, "top-right");     
+      
 //  
 //      
 //  /////////////////// Query Events//////////////////////////////

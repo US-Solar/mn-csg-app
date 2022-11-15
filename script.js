@@ -12,9 +12,12 @@
   // TOP of REQUIRE
   console.log("TOP OF REQUIRE");
   
-  esriConfig.apiKey = "AAPKc484c74fa23948cabcfac16c7aeb0686pq_j3wO_RKSRk5XKsXRfce7zvJdWILL_CQKtXpQW0s0RiIj9nhYN3OT9FnQ9LbzY";
-
+  //  esriConfig.apiKey = "AAPKc484c74fa23948cabcfac16c7aeb0686pq_j3wO_RKSRk5XKsXRfce7zvJdWILL_CQKtXpQW0s0RiIj9nhYN3OT9FnQ9LbzY";
   
+    console.log("TOP OF REQUIRE");
+  const webmapId = new URLSearchParams(window.location.search).get("webmap") ?? "8468f4f6ce3c4151883eab89b2020935"; // original 
+        //"c840c7c265ff4188a8fff535f8eba389" //dev map
+
       
   // Arcade Script
   const arcadeScript = document.getElementById("projects-arcade").text;
@@ -185,7 +188,9 @@
   //Create the map
   const map = new Map({
       basemap: "arcgis-topographic", // Basemap layer
-      layers: [csgLayer, counties]
+       portalItem: {
+          id: webmapId
+        },
   });
 
   //Create the view
@@ -215,7 +220,7 @@
     map.add(counties);
     map.add(csgLayer);
       
-      const legend = new Legend({
+   const legend = new Legend({
       view: view,
       layerInfos: [
           {
@@ -273,14 +278,14 @@
       //Attempt to fix the query issue by zooming in before querying....    
       //only works when you click a second time....
           
-//      view.goTo({
-//          center: [geom.centroid.longitude, geom.centroid.latitude], zoom: 9
-//      })
-//          console.log([geom.centroid.longitude, geom.centroid.latitude]);
-//          console.log(geom);
-//          console.log(graphic);
-//
-//          console.log(graphic.layer);
+      view.goTo({
+          center: [geom.centroid.longitude, geom.centroid.latitude], zoom: 9
+      })
+          console.log([geom.centroid.longitude, geom.centroid.latitude]);
+          console.log(geom);
+          console.log(graphic);
+
+          console.log(graphic.layer);
          // Found I don't need this because I'm not doing highlights....
          view.whenLayerView(graphic.layer).then(function(layerView){
          
@@ -289,6 +294,7 @@
                   geometry: geom,
                   spatialRelationship: "intersects",
                   returnGeometry: true,
+                  returnQueryGeometry: true,
                   orderByFields: ["NAME DESC"]
               });
               counties.queryFeatures(query).then((featureSet) => {

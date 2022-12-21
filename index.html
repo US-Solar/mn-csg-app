@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css" />
   <script src="script.js"></script>
   
+<!-- Arcade Script that lists intersecting counties to display in a popup    -->
  <script type="text/arcgis-arcade" id="projects-arcade">
     var counties =  FeatureSetByName($map,"USA Counties (Generalized)")
 
@@ -45,7 +46,7 @@
     
 <body>
 
-   
+<!--    Where the queried projects are listed-->
     <calcite-shell class="projects-list" style="top: 47px">
     <calcite-shell-panel slot="primary-panel">
         <calcite-panel heading="Projects in Adjacent Counties" summary="Click a county to view projects">
@@ -62,6 +63,17 @@
     <div id="viewDiv"></div>
         
   </calcite-shell>  
+  
+<!--   Program filters -->
+  <div id="program-filter" class="esri-widget">
+    <div class="program-item visible-program" data-program="MN CSG 1.0">MN CSG 1.0</div>
+    <div class="program-item visible-program" data-program="MN CSG 2.0">MN CSG 2.0</div>
+    <div class="program-item visible-program" data-program="MN CSG VOS17">MN CSG VOS17</div>
+    <div class="program-item visible-program" data-program="MN CSG VOS18">MN CSG VOS18</div>
+    <div class="program-item visible-program" data-program="MN CSG VOS19">MN CSG VOS19</div>
+    <div class="program-item visible-program" data-program="MN CSG VOS20">MN CSG VOS20</div>
+    <div class="program-item visible-program" data-program="DG Project">DG Project</div>
+</div>    
     
   
 </body>

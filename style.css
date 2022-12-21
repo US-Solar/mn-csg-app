@@ -46,6 +46,29 @@ body,
       margin-inline-end: .75rem;    
 }
 
+#program-filter {
+/*        height: 160px;*/
+        width: 100%;
+        visibility: hidden;
+      }
+
+.program-item {
+        width: 100%;
+        padding: 7px;
+        text-align: center;
+        vertical-align: baseline;
+        cursor: pointer;
+/*        height: 40px;*/
+    }
+
+.program-item:focus {
+        background-color: dimgrey;  
+    }
+
+.program-item:hover {
+     background-color: dimgrey;
+    }
+
 
 /*
 #info {
